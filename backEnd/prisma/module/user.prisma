@@ -1,7 +1,14 @@
+enum UserRole {
+  STUDENT
+  TEACHER
+
+  @@map("user_role")
+}
 model User {
   id        String  @id @default(cuid())
-  name      String
+  username  String  @unique
   year      String
   phone     String
   password  String
+  role      UserRole @default(STUDENT)
 }
