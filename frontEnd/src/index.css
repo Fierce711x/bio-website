@@ -1,111 +1,265 @@
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
+@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&family=El+Messiri:wght@400..700&display=swap");
+@import "tailwindcss";
+@theme {
+  --color-primary: #2d7ac7;
+  --color-primary-container: #a8cfec;
+  --color-secondary: #22c55e;
+  --color-secondary-container: #dffff1;
+  --color-tertiary: #4c5a68;
+  --color-tertiary-container: #737d86;
+  --color-error: #dc2626;
+  --color-error-container: #f8d3d3;
+  --color-surface-variant: #dfe4ec;
+  --color-background: #f8fafc;
+  --font-cairo: "Cairo", sans-serif;
+  --font-el-messiri: "El Messiri", sans-serif;
+  --animate-horizontal-glass: horizontal-glass 3s linear infinite;
+  --animate-vertical-glass: vertical-glass 3s linear infinite;
+  --animate-glow-after: glow-after 2s ease-in-out infinite;
+  --animate-glow-before: glow-before 2s ease-in-out infinite;
+  @keyframes horizontal-glass {
+    0%,
+    25%,
+    75%,
+    100% {
+      top: 10%;
+      right: -10%;
+    }
+    50% {
+      right: 50%;
+    }
+  }
+  @keyframes vertical-glass {
+    0%,
+    100% {
+      left: -20%;
+      top: 22%;
+    }
+    25%,
+    75% {
+      top: 60%;
+    }
+  }
+  @keyframes glow-before {
+    0%,
+    100% {
+      box-shadow: 5px 0px 8px 0px white;
+    }
+    50% {
+      box-shadow: 5px 0px 8px 7px white;
+    }
+  }
+  @keyframes glow-after {
+    0%,
+    100% {
+      box-shadow: -5px 0px 8px 0px white;
+    }
+    50% {
+      box-shadow: -5px 0px 8px 7px white;
+    }
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+@utility font-display-bold-large {
+  font-family: var(--font-el-messiri);
+  font-size: 3.5625rem;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 4rem;
+  letter-spacing: 0px;
 }
 
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
+@utility font-display-bold-medium {
+  font-family: var(--font-el-messiri);
+  font-size: 2.8125rem;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 3.25rem;
+  letter-spacing: 0px;
 }
 
-body {
-  margin: 0;
+@utility font-display-bold-small {
+  font-family: var(--font-el-messiri);
+  font-size: 2.25rem;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 2.75rem;
+  letter-spacing: 0px;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
+@utility font-headline-semibold-large {
+  font-family: var(--font-el-messiri);
+  font-size: 2rem;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 2.5rem;
+  letter-spacing: 0px;
+}
+
+@utility font-headline-semibold-medium {
+  font-family: var(--font-el-messiri);
+  font-size: 1.75rem;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 2.25rem;
+  letter-spacing: 0px;
+}
+
+@utility font-headline-semibold-small {
+  font-family: var(--font-el-messiri);
+  font-size: 1.5rem;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 2rem;
+  letter-spacing: 0px;
+}
+
+@utility font-title-semibold-large {
+  font-family: var(--font-cairo);
+  font-size: 1.375rem;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.75rem;
+  letter-spacing: 0px;
+}
+
+@utility font-title-semibold-medium {
+  font-family: var(--font-cairo);
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.5rem;
+  letter-spacing: 0.15px;
+}
+
+@utility font-title-semibold-small {
+  font-family: var(--font-cairo);
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.25rem;
+  letter-spacing: 0.1px;
+}
+
+@utility font-body-regular-large {
+  font-family: var(--font-cairo);
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.5rem;
+  letter-spacing: 0.5px;
+}
+
+@utility font-body-regular-medium {
+  font-family: var(--font-cairo);
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.25rem;
+  letter-spacing: 0.25px;
+}
+
+@utility font-body-regular-small {
+  font-family: var(--font-cairo);
+  font-size: 0.75rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1rem;
+  letter-spacing: 0.4px;
+}
+
+@utility font-label-large {
+  font-family: var(--font-cairo);
+  font-size: 0.875rem;
+  font-style: normal;
   font-weight: 500;
-  color: var(--text-h);
+  line-height: 1.25rem;
+  letter-spacing: 0.1px;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
+@utility font-label-medium {
+  font-family: var(--font-cairo);
+  font-size: 0.75rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1rem;
+  letter-spacing: 0.5px;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+@utility font-label-small {
+  font-family: var(--font-cairo);
+  font-size: 0.6875rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1rem;
+  letter-spacing: 0.5px;
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+@utility filled-button {
+  background-color: var(--color-primary);
+  padding: 10px 20px;
+  border-radius: 32px;
+  text-align: center;
+  border: 1px solid var(--color-primary);
+  color: white;
+  transition-property: color, background-color, border-color;
+  transition-duration: 200ms;
+  transition-timing-function: ease-in-out;
+}
+
+.glass,
+.second-glass {
+  background-color: rgba(179, 249, 219, 0.322);
+  background-image: linear-gradient(to left, rgba(255, 255, 255, 0.2), transparent);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0px 0px 15px 2px rgba(255, 255, 255, 0.18);
+}
+
+.glass {
+  backdrop-filter: url(#glass-distortion) blur(1px);
+}
+
+.second-glass {
+  backdrop-filter: url(#figma-refraction-map) blur(1px);
+}
+
+.glass::before,
+.glass::after,
+.second-glass::before,
+.second-glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid transparent;
+  mask:
+    linear-gradient(black) border-box,
+    linear-gradient(black) padding-box;
+  mask-composite: subtract;
+}
+
+.glass::before,
+.second-glass::before {
+  z-index: 0;
+}
+
+.glass::after,
+.second-glass::after {
+  z-index: -1;
+}
+
+.glass::after {
+  background: linear-gradient(40deg, rgb(219, 219, 219, 0.3), rgb(175, 175, 175, 1)) border-box;
+}
+
+.glass::before {
+  background: linear-gradient(40deg, rgb(219, 219, 219, 1)) border-box;
+}
+
+.second-glass::after {
+  background: linear-gradient(40deg, rgb(219, 219, 219, 0.3), rgb(175, 175, 175, 1)) border-box;
+}
+
+.second-glass::before {
+  background: linear-gradient(40deg, rgb(219, 219, 219, 1)) border-box;
 }
