@@ -7,22 +7,18 @@ import {
   IsStrongPassword,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
-enum Year {
-  SEC_1 = 'sec_1',
-  SEC_2 = 'sec_2',
-  SEC_3 = 'sec_3',
-}
+import { StudentYear } from '../../../generated/enums.js';
 export class CreateUserDto {
   @IsString()
-  @MinLength(6)
+  @MinLength(8)
   @MaxLength(50)
   @Transform(({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.toLowerCase() : value,
   )
   username: string;
 
-  @IsEnum(Year)
-  year: Year;
+  @IsEnum(StudentYear)
+  year: StudentYear;
 
   @IsPhoneNumber('EG')
   phone: string;

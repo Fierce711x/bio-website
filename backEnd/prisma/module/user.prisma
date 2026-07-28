@@ -4,10 +4,17 @@ enum UserRole {
 
   @@map("user_role")
 }
+enum StudentYear {
+  SEC_1
+  SEC_2
+  SEC_3
+
+  @@map("student_year")
+}
 model User {
   id        String  @id @default(cuid())
   username  String  @unique
-  year      String
+  year      StudentYear @default(SEC_1)
   phone     String
   password  String
   role      UserRole @default(STUDENT)

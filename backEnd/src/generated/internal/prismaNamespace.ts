@@ -566,6 +566,20 @@ export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaMod
 
 
 /**
+ * Reference to a field of type 'StudentYear'
+ */
+export type EnumStudentYearFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StudentYear'>
+    
+
+
+/**
+ * Reference to a field of type 'StudentYear[]'
+ */
+export type ListEnumStudentYearFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StudentYear[]'>
+    
+
+
+/**
  * Reference to a field of type 'UserRole'
  */
 export type EnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserRole'>

@@ -1,21 +1,11 @@
-import {
-  Body,
-  Controller,
-  Post,
-  Res,
-  Get,
-  UseGuards,
-  Req,
-} from '@nestjs/common';
+import { Body, Controller, Post, Res, Get, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import type { Response } from 'express';
 import { JwtAuthGuard } from './guard/jwt.guard.js';
 import { CreateUserDto } from '../userModule/dto/createUser.dto.js';
-import type { Request } from '../../types/request.js';
-import { Roles } from './decorators/roles.decorator.js';
-import { UserRole } from '../../generated/enums.js';
-import { RolesGuard } from './guard/roles.guard.js';
+import { CurrentUser } from './decorators/currentUser.decorator.js';
+import type { User } from 'src/generated/client.js';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -28,7 +18,7 @@ export class AuthController {
       secure: false,
       sameSite: 'lax',
     });
-    return res.status(200).json({ message: 'logged in successfully' });
+    return res.status(200).json({ message: 'Logged in successfully' });
   }
 
   @Post('signup')
@@ -43,9 +33,24 @@ export class AuthController {
   }
 
   @Get('me')
-  @Roles(UserRole.TEACHER)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  me(@Req() req: Request) {
-    return req.user;
+  @UseGuards(JwtAuthGuard)
+  me(@CurrentUser() user: User) {
+    const { id, username, role } = user;
+    return {
+      id,
+      username,
+      role,
+    };
+  }
+
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  logout(@Res() res: Response) {
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+    });
+    return res.status(200).json({ message: 'Logged out successfully' });
   }
 }

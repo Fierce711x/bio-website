@@ -27,7 +27,7 @@ export type AggregateUser = {
 export type UserMinAggregateOutputType = {
   id: string | null
   username: string | null
-  year: string | null
+  year: $Enums.StudentYear | null
   phone: string | null
   password: string | null
   role: $Enums.UserRole | null
@@ -36,7 +36,7 @@ export type UserMinAggregateOutputType = {
 export type UserMaxAggregateOutputType = {
   id: string | null
   username: string | null
-  year: string | null
+  year: $Enums.StudentYear | null
   phone: string | null
   password: string | null
   role: $Enums.UserRole | null
@@ -156,7 +156,7 @@ export type UserGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
 export type UserGroupByOutputType = {
   id: string
   username: string
-  year: string
+  year: $Enums.StudentYear
   phone: string
   password: string
   role: $Enums.UserRole
@@ -186,7 +186,7 @@ export type UserWhereInput = {
   NOT?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   id?: Prisma.StringFilter<"User"> | string
   username?: Prisma.StringFilter<"User"> | string
-  year?: Prisma.StringFilter<"User"> | string
+  year?: Prisma.EnumStudentYearFilter<"User"> | $Enums.StudentYear
   phone?: Prisma.StringFilter<"User"> | string
   password?: Prisma.StringFilter<"User"> | string
   role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
@@ -207,7 +207,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   OR?: Prisma.UserWhereInput[]
   NOT?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
-  year?: Prisma.StringFilter<"User"> | string
+  year?: Prisma.EnumStudentYearFilter<"User"> | $Enums.StudentYear
   phone?: Prisma.StringFilter<"User"> | string
   password?: Prisma.StringFilter<"User"> | string
   role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
@@ -231,7 +231,7 @@ export type UserScalarWhereWithAggregatesInput = {
   NOT?: Prisma.UserScalarWhereWithAggregatesInput | Prisma.UserScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"User"> | string
   username?: Prisma.StringWithAggregatesFilter<"User"> | string
-  year?: Prisma.StringWithAggregatesFilter<"User"> | string
+  year?: Prisma.EnumStudentYearWithAggregatesFilter<"User"> | $Enums.StudentYear
   phone?: Prisma.StringWithAggregatesFilter<"User"> | string
   password?: Prisma.StringWithAggregatesFilter<"User"> | string
   role?: Prisma.EnumUserRoleWithAggregatesFilter<"User"> | $Enums.UserRole
@@ -240,7 +240,7 @@ export type UserScalarWhereWithAggregatesInput = {
 export type UserCreateInput = {
   id?: string
   username: string
-  year: string
+  year?: $Enums.StudentYear
   phone: string
   password: string
   role?: $Enums.UserRole
@@ -249,7 +249,7 @@ export type UserCreateInput = {
 export type UserUncheckedCreateInput = {
   id?: string
   username: string
-  year: string
+  year?: $Enums.StudentYear
   phone: string
   password: string
   role?: $Enums.UserRole
@@ -258,7 +258,7 @@ export type UserUncheckedCreateInput = {
 export type UserUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   username?: Prisma.StringFieldUpdateOperationsInput | string
-  year?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.EnumStudentYearFieldUpdateOperationsInput | $Enums.StudentYear
   phone?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
@@ -267,7 +267,7 @@ export type UserUpdateInput = {
 export type UserUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   username?: Prisma.StringFieldUpdateOperationsInput | string
-  year?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.EnumStudentYearFieldUpdateOperationsInput | $Enums.StudentYear
   phone?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
@@ -276,7 +276,7 @@ export type UserUncheckedUpdateInput = {
 export type UserCreateManyInput = {
   id?: string
   username: string
-  year: string
+  year?: $Enums.StudentYear
   phone: string
   password: string
   role?: $Enums.UserRole
@@ -285,7 +285,7 @@ export type UserCreateManyInput = {
 export type UserUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   username?: Prisma.StringFieldUpdateOperationsInput | string
-  year?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.EnumStudentYearFieldUpdateOperationsInput | $Enums.StudentYear
   phone?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
@@ -294,7 +294,7 @@ export type UserUpdateManyMutationInput = {
 export type UserUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   username?: Prisma.StringFieldUpdateOperationsInput | string
-  year?: Prisma.StringFieldUpdateOperationsInput | string
+  year?: Prisma.EnumStudentYearFieldUpdateOperationsInput | $Enums.StudentYear
   phone?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
@@ -329,6 +329,10 @@ export type UserMinOrderByAggregateInput = {
 
 export type StringFieldUpdateOperationsInput = {
   set?: string
+}
+
+export type EnumStudentYearFieldUpdateOperationsInput = {
+  set?: $Enums.StudentYear
 }
 
 export type EnumUserRoleFieldUpdateOperationsInput = {
@@ -381,7 +385,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     username: string
-    year: string
+    year: $Enums.StudentYear
     phone: string
     password: string
     role: $Enums.UserRole
@@ -810,7 +814,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
 export interface UserFieldRefs {
   readonly id: Prisma.FieldRef<"User", 'String'>
   readonly username: Prisma.FieldRef<"User", 'String'>
-  readonly year: Prisma.FieldRef<"User", 'String'>
+  readonly year: Prisma.FieldRef<"User", 'StudentYear'>
   readonly phone: Prisma.FieldRef<"User", 'String'>
   readonly password: Prisma.FieldRef<"User", 'String'>
   readonly role: Prisma.FieldRef<"User", 'UserRole'>

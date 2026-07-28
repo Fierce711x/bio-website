@@ -29,6 +29,13 @@ export type StringFilter<$PrismaModel = never> = {
   not?: Prisma.NestedStringFilter<$PrismaModel> | string
 }
 
+export type EnumStudentYearFilter<$PrismaModel = never> = {
+  equals?: $Enums.StudentYear | Prisma.EnumStudentYearFieldRefInput<$PrismaModel>
+  in?: $Enums.StudentYear[] | Prisma.ListEnumStudentYearFieldRefInput<$PrismaModel>
+  notIn?: $Enums.StudentYear[] | Prisma.ListEnumStudentYearFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumStudentYearFilter<$PrismaModel> | $Enums.StudentYear
+}
+
 export type EnumUserRoleFilter<$PrismaModel = never> = {
   equals?: $Enums.UserRole | Prisma.EnumUserRoleFieldRefInput<$PrismaModel>
   in?: $Enums.UserRole[] | Prisma.ListEnumUserRoleFieldRefInput<$PrismaModel>
@@ -54,6 +61,16 @@ export type StringWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedStringFilter<$PrismaModel>
 }
 
+export type EnumStudentYearWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.StudentYear | Prisma.EnumStudentYearFieldRefInput<$PrismaModel>
+  in?: $Enums.StudentYear[] | Prisma.ListEnumStudentYearFieldRefInput<$PrismaModel>
+  notIn?: $Enums.StudentYear[] | Prisma.ListEnumStudentYearFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumStudentYearWithAggregatesFilter<$PrismaModel> | $Enums.StudentYear
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumStudentYearFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumStudentYearFilter<$PrismaModel>
+}
+
 export type EnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.UserRole | Prisma.EnumUserRoleFieldRefInput<$PrismaModel>
   in?: $Enums.UserRole[] | Prisma.ListEnumUserRoleFieldRefInput<$PrismaModel>
@@ -76,6 +93,13 @@ export type NestedStringFilter<$PrismaModel = never> = {
   startsWith?: string | Prisma.StringFieldRefInput<$PrismaModel>
   endsWith?: string | Prisma.StringFieldRefInput<$PrismaModel>
   not?: Prisma.NestedStringFilter<$PrismaModel> | string
+}
+
+export type NestedEnumStudentYearFilter<$PrismaModel = never> = {
+  equals?: $Enums.StudentYear | Prisma.EnumStudentYearFieldRefInput<$PrismaModel>
+  in?: $Enums.StudentYear[] | Prisma.ListEnumStudentYearFieldRefInput<$PrismaModel>
+  notIn?: $Enums.StudentYear[] | Prisma.ListEnumStudentYearFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumStudentYearFilter<$PrismaModel> | $Enums.StudentYear
 }
 
 export type NestedEnumUserRoleFilter<$PrismaModel = never> = {
@@ -111,6 +135,16 @@ export type NestedIntFilter<$PrismaModel = never> = {
   gt?: number | Prisma.IntFieldRefInput<$PrismaModel>
   gte?: number | Prisma.IntFieldRefInput<$PrismaModel>
   not?: Prisma.NestedIntFilter<$PrismaModel> | number
+}
+
+export type NestedEnumStudentYearWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.StudentYear | Prisma.EnumStudentYearFieldRefInput<$PrismaModel>
+  in?: $Enums.StudentYear[] | Prisma.ListEnumStudentYearFieldRefInput<$PrismaModel>
+  notIn?: $Enums.StudentYear[] | Prisma.ListEnumStudentYearFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumStudentYearWithAggregatesFilter<$PrismaModel> | $Enums.StudentYear
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumStudentYearFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumStudentYearFilter<$PrismaModel>
 }
 
 export type NestedEnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
