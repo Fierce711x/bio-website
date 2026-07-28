@@ -2,7 +2,7 @@ import DNA from "../assets/DNA.png";
 export default function Hero() {
   return (
     <>
-      <section className="flex justify-between pt-9 px-20 capitalize">
+      <section className="flex justify-between pt-9 px-20 capitalize w-screen">
         <div className="w-[30vw] flex flex-col items-start gap-7 justify-start py-20 relative">
           <p className="font-display-bold-large text-tertiary">
             explore the <br /> science of life
@@ -45,7 +45,9 @@ export default function Hero() {
               fill="#A8CFEC"
             />
           </svg>
-          <img src={DNA} alt="" className="aspect-22/25 h-170 w-150 absolute -top-15 rotate-6 -z-100" />
+          <div className="h-full">
+            <img src={DNA} alt="" className="aspect-22/25 h-170 w-150 relative -top-15 rotate-6 -z-100" />
+          </div>
           <span className="block w-70 h-45 rounded-4xl absolute -left-[20%] top-[22%] second-glass animate-vertical-glass"></span>
           <span className="block w-65 h-32.5 rounded-4xl absolute top-[10%] -right-[10%] glass animate-horizontal-glass"></span>
           <span className="block w-25 h-31.25 bg-[#B3F9DB] absolute rounded-4xl top-[8%] left-[6%] -z-20"></span>
@@ -55,4 +57,3 @@ export default function Hero() {
     </>
   );
 }
-// className="block absolute w-20 h-20 z-10 bg-primary-container skew-x-20 rotate-54"

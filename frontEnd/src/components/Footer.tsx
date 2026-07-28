@@ -5,7 +5,7 @@ import whatsapp from "../assets/whatsapp-image.png";
 export default function Footer() {
   return (
     <>
-      <footer className="bg-primary-container p-[50px_150px] flex justify-between items-center capitalize">
+      <footer className="bg-primary-container p-[50px_150px] flex justify-between items-center capitalize w-full">
         <Logo />
         <section className="flex flex-col items-center justify-between gap-7">
           <h4>social media</h4>
