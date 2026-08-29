@@ -2,7 +2,7 @@ import { useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { LoginSchema } from "../../lib/zod/AuthSchema";
 import { useAuth } from "../hooks/useAuth";
-import type { LoginData } from "../types";
+import type { LoginData } from "../types/authTypes";
 import { useNavigate } from "react-router-dom";
 import type { RedirectLocation } from "../../lib/react-router/types";
 import AuthForm from "../../components/AuthForm";
@@ -29,7 +29,7 @@ export default function LoginPage() {
   return (
     <AuthForm<LoginData>
       formFields={[
-        { type: "text", key: "username", autoComplete: "off" },
+        { type: "text", key: "identifier", autoComplete: "off", placeHolder: "Username or Email" },
         { type: "password", key: "password", autoComplete: "current-password" },
       ]}
       form={form}

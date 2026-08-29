@@ -2,13 +2,13 @@ interface CardProps {
   img: string;
   name: string;
   level: string;
-  year: string;
+  grade: string;
   discription: string;
   length: string;
   duration: string;
 }
 
-export default function Card({ img, name, level, year, discription, length, duration }: CardProps) {
+export default function Card({ img, name, level, grade, discription, length, duration }: CardProps) {
   return (
     <>
       <div className="flex flex-col items-center bg-white shadow-[0px_4px_16px_0px_rgba(0,0,0,0.18)] rounded-2xl w-[clamp(220px,calc((300/1440)*100vw),300px)] h-[clamp(280px,calc((340/1284)*100dvh),340px)] justify-start overflow-clip capitalize m-auto">
@@ -22,7 +22,7 @@ export default function Card({ img, name, level, year, discription, length, dura
           </p>
         </section>
         <section className="flex flex-col gap-2.5 text-[#475569]  font-cairo font-medium p-[14px_16px] w-full">
-          <h3 className="font-el-messiri font-bold text-[#0F172A]">{year}</h3>
+          <h3 className="font-el-messiri font-bold text-[#0F172A]">{grade}</h3>
           <p className="text-[12px]">{discription}</p>
           <span className="text-[11px] leading-4 tracking-[0.5px] flex gap-2.5 items-center">
             <span>{length}</span> <span className="bg-[#94A3B8] inline-block h-0.75 w-0.75 rounded-[50%]"></span> <span>{duration}</span>

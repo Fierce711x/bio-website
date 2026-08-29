@@ -1,8 +1,8 @@
 import * as z from "zod";
-import { StudentYear } from "../../auth/types";
+import { StudentGrade } from "../../auth/types/userTypes";
 
 export const LoginSchema = z.object({
-  username: z
+  identifier: z
     .string({ error: "username must be a string" })
     .trim()
     .min(8, { error: "username must be atleast 8 characters long" })
@@ -30,7 +30,8 @@ export const SignupSchema = z.object({
     .min(8, "username must be atleast 8 characters long")
     .max(50, "username cant exceed 50 characters")
     .toLowerCase(),
-  year: z.enum(StudentYear),
+  email: z.email(),
+  grade: z.enum(StudentGrade),
   phone: z
     .string("Phone number is required")
     .trim()

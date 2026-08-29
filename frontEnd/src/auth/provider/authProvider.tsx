@@ -1,9 +1,9 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AuthContext } from "./authContext";
-import type { AuthContextType } from "./types";
-import { loginRequest, logoutRequest, getCurrentUser, signupRequest } from "./api/auth";
-import type { LoginData, SignupData } from "./types";
-import { queryKeys } from "../lib/react-query/queryKeys";
+import { AuthContext } from "../context/authContext";
+import type { AuthContextType } from "../types/contextTypes";
+import { loginRequest, logoutRequest, getCurrentUser, signupRequest } from "../api/auth";
+import type { LoginData, SignupData } from "../types/authTypes";
+import { queryKeys } from "../../lib/react-query/queryKeys";
 import { Outlet } from "react-router";
 export default function AuthProvider() {
   const { data: user = null, isLoading: loading } = useQuery({ queryKey: queryKeys.me, queryFn: getCurrentUser });

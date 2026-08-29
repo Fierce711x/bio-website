@@ -1,6 +1,7 @@
 import type { FieldValues, Path, UseFormReturn } from "react-hook-form";
-type inputType = "text" | "password" | "number" | "tel";
-type FormField<T> = { type: inputType; autoComplete: string; key: Path<T> };
+import { ApiError } from "../lib/axios/apiError";
+type inputType = "text" | "password" | "number" | "tel" | "email";
+type FormField<T> = { type: inputType; autoComplete: string; key: Path<T>; placeHolder?: string };
 type AuthFormProps<T extends FieldValues> = {
   formFields: FormField<T>[];
   form: UseFormReturn<T>;
@@ -21,26 +22,45 @@ export default function AuthForm<T extends FieldValues>({ formFields, form, onSu
             try {
               await onSubmit(data);
             } catch (err) {
-              console.log(err);
+              if (err instanceof ApiError) {
+                console.log(err.message);
+                console.log(err.statusCode);
+              }
             }
           },
           errors => console.log(errors),
         )}
         className="flex flex-col gap-10 justify-center items-center w-75 m-auto rounded-4xl shadow-[0_1px_8px_-1px_rgba(0,0,0,0.5)] aspect-square my-5 p-5">
-        {formFields.map(({ key, autoComplete, type }) => {
+        {formFields.map(({ key, autoComplete, type, placeHolder }) => {
+          if (key === "grade")
+            return (
+              <div className="w-full" key={key}>
+                <select
+                  autoComplete={autoComplete}
+                  id={key}
+                  {...register(key)}
+                  defaultValue={"SEC_1"}
+                  className="rounded-4xl border border-black p-2.5 w-full">
+                  <option value="SEC_1">1st Secondary</option>
+                  <option value="SEC_2">2nd Secondary</option>
+                  <option value="SEC_3">3rd Secondary</option>
+                </select>
+              </div>
+            );
           return (
             <div className="w-full" key={key}>
               <input
                 autoComplete={autoComplete}
                 type={type}
                 id={key}
-                placeholder={key}
+                placeholder={placeHolder ?? key}
                 {...register(key)}
                 className="rounded-4xl border border-black p-2.5 w-full"
               />
             </div>
           );
         })}
+        {/* {mode === "signup" && } */}
         <button type="submit" className="filled-button" disabled={isSubmitting}>
           submit
         </button>

@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { LoginSchema, SignupSchema } from "../lib/zod/AuthSchema";
+import { LoginSchema, SignupSchema } from "../../lib/zod/AuthSchema";
 
 export type LoginData = z.infer<typeof LoginSchema>;
 export type SignupData = z.infer<typeof SignupSchema>;
@@ -9,14 +9,14 @@ export const UserRole = {
   TEACHER: "TEACHER",
 } as const;
 
-export const StudentYear = {
+export const StudentGrade = {
   SEC_1: "SEC_1",
   SEC_2: "SEC_2",
   SEC_3: "SEC_3",
 } as const;
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
-export type StudentYear = (typeof StudentYear)[keyof typeof StudentYear];
+export type StudentGrade = (typeof StudentGrade)[keyof typeof StudentGrade];
 
 export interface AuthUser {
   id: string;

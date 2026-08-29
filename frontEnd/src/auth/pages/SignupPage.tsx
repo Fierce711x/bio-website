@@ -1,6 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import type { SignupData } from "../types";
+import type { SignupData } from "../types/authTypes";
 import { useNavigate } from "react-router-dom";
 import type { RedirectLocation } from "../../lib/react-router/types";
 import AuthForm from "../../components/AuthForm";
@@ -31,7 +31,8 @@ export default function SignupPage() {
     <AuthForm<SignupData>
       formFields={[
         { type: "text", key: "username", autoComplete: "off" },
-        { type: "text", key: "year", autoComplete: "off" },
+        { type: "email", key: "email", autoComplete: "off" },
+        { type: "text", key: "grade", autoComplete: "off" },
         { type: "number", key: "phone", autoComplete: "off" },
         { type: "password", key: "password", autoComplete: "current-password" },
       ]}

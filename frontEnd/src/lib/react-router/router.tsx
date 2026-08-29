@@ -5,7 +5,7 @@ import RequireAuth from "./layouts/requireAuth";
 import LoginPage from "../../auth/pages/LoginPage";
 import RequireGuest from "./layouts/requireGuest";
 import SignupPage from "../../auth/pages/SignupPage";
-import AuthProvider from "../../auth/authProvider";
+import AuthProvider from "../../auth/provider/authProvider";
 import NotFound from "../../pages/NotFound";
 
 export const router = createBrowserRouter([
