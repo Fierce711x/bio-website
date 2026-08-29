@@ -1,40 +1,86 @@
-import { Body, Controller, Post, Res, Get, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Res,
+  Get,
+  UseGuards,
+  Req,
+  Param,
+} from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import type { Response } from 'express';
 import { JwtAuthGuard } from './guard/jwt.guard.js';
-import { CreateUserDto } from '../userModule/dto/createUser.dto.js';
+import { CreateUserDto } from '#user/dto/createUser.dto.js';
 import { CurrentUser } from './decorators/currentUser.decorator.js';
-import type { User } from 'src/generated/client.js';
+import type { AuthenticatedUser } from './types/user.js';
+import { ConfigService } from '@nestjs/config';
+import type { Request } from '#src/types/request.js';
+import { setAuthCookies, clearAuthCookies } from './utils/authCookies.js';
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly config: ConfigService,
+  ) {}
+
+  @Post('refresh')
+  async refresh(@Req() req: Request, @Res() res: Response) {
+    const { accessToken, newRefreshToken } = await this.authService.refresh(
+      req.cookies.refreshToken,
+      req.cookies.deviceId,
+    );
+
+    setAuthCookies(res, this.config, {
+      accessToken,
+      refreshToken: newRefreshToken,
+    });
+
+    return res.status(200).json({ message: 'token refreshed successfully' });
+  }
 
   @Post('login')
-  async login(@Body() loginDto: LoginDto, @Res() res: Response) {
-    const token = await this.authService.login(loginDto);
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+  async login(
+    @Body() loginDto: LoginDto,
+    @Res() res: Response,
+    @Req() req: Request,
+  ) {
+    const { accessToken, refreshToken } = await this.authService.login(
+      loginDto,
+      req.cookies.deviceId,
+    );
+
+    setAuthCookies(res, this.config, {
+      accessToken,
+      refreshToken,
     });
+
     return res.status(200).json({ message: 'Logged in successfully' });
   }
 
   @Post('signup')
-  async signup(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
-    const token = await this.authService.signup(createUserDto);
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+  async signup(
+    @Body() createUserDto: CreateUserDto,
+    @Res() res: Response,
+    @Req() req: Request,
+  ) {
+    const { accessToken, refreshToken } = await this.authService.signup(
+      createUserDto,
+      req.cookies.deviceId,
+    );
+
+    setAuthCookies(res, this.config, {
+      accessToken,
+      refreshToken,
     });
-    return res.status(200).json({ message: 'signed up successfully' });
+
+    return res.status(201).json({ message: 'signed up successfully' });
   }
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  me(@CurrentUser() user: User) {
+  me(@CurrentUser() user: AuthenticatedUser) {
     const { id, username, role } = user;
     return {
       id,
@@ -45,12 +91,31 @@ export class AuthController {
 
   @Post('logout')
   @UseGuards(JwtAuthGuard)
-  logout(@Res() res: Response) {
-    res.clearCookie('token', {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-    });
+  async logoutCurrentDevice(
+    @Res() res: Response,
+    @CurrentUser('id') userId: string,
+    @Req() req: Request,
+  ) {
+    await this.authService.logoutDevice(userId, req.cookies.deviceId);
+
+    clearAuthCookies(res, this.config);
+
     return res.status(200).json({ message: 'Logged out successfully' });
+  }
+  @Post('logout/:deviceId')
+  @UseGuards(JwtAuthGuard)
+  async logoutDevice(
+    @CurrentUser('id') userId: string,
+    @Param('deviceId') deviceId: string,
+  ) {
+    await this.authService.logoutDevice(userId, deviceId);
+    return { message: 'logged out of the device successfully' };
+  }
+
+  @Post('logout/all')
+  @UseGuards(JwtAuthGuard)
+  async logoutAllDevices(@CurrentUser('id') userId: string) {
+    await this.authService.logoutAllDevices(userId);
+    return { message: 'logged out of all devices successfully' };
   }
 }

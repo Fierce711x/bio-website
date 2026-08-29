@@ -1,18 +1,9 @@
-import {
-  IsString,
-  MaxLength,
-  IsStrongPassword,
-  MinLength,
-} from 'class-validator';
-import { Transform } from 'class-transformer';
+import { IsString, Validate, IsStrongPassword } from 'class-validator';
+import { IsEmailOrUsername } from '#auth/decorators/isEmailorUsername.decorator.js';
 export class LoginDto {
   @IsString()
-  @MinLength(8)
-  @MaxLength(50)
-  @Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.toLowerCase() : value,
-  )
-  username: string;
+  @Validate(IsEmailOrUsername)
+  identifier: string;
 
   @IsString()
   @IsStrongPassword({

@@ -5,9 +5,10 @@ import {
   MaxLength,
   IsEnum,
   IsStrongPassword,
+  IsEmail,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { StudentYear } from '../../../generated/enums.js';
+import { StudentGrade } from '#src/generated/enums.js';
 export class CreateUserDto {
   @IsString()
   @MinLength(8)
@@ -17,8 +18,14 @@ export class CreateUserDto {
   )
   username: string;
 
-  @IsEnum(StudentYear)
-  year: StudentYear;
+  @IsEmail()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.toLowerCase() : value,
+  )
+  email: string;
+
+  @IsEnum(StudentGrade)
+  grade: StudentGrade;
 
   @IsPhoneNumber('EG')
   phone: string;

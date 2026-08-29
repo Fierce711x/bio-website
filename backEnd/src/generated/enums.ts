@@ -17,10 +17,10 @@ export const UserRole = {
 export type UserRole = (typeof UserRole)[keyof typeof UserRole]
 
 
-export const StudentYear = {
+export const StudentGrade = {
   SEC_1: 'SEC_1',
   SEC_2: 'SEC_2',
   SEC_3: 'SEC_3'
 } as const
 
-export type StudentYear = (typeof StudentYear)[keyof typeof StudentYear]
+export type StudentGrade = (typeof StudentGrade)[keyof typeof StudentGrade]

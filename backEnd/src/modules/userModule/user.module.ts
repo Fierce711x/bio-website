@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { UserService } from './user.service.js';
 import { UserController } from './user.controller.js';
-import { PasswordModule } from '../passwordModule/password.module.js';
+import { PasswordModule } from '#password/password.module.js';
 
 @Module({
   imports: [PasswordModule],

@@ -1,4 +1,4 @@
-import { UserRole } from '../../../generated/enums.ts';
+import { UserRole } from '#src/generated/enums.ts';
 export interface JwtPayload {
   sub: string;
   role: UserRole;

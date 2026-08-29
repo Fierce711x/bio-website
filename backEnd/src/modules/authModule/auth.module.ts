@@ -3,9 +3,10 @@ import { AuthService } from './auth.service.js';
 import { AuthController } from './auth.controller.js';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { PasswordModule } from '../passwordModule/password.module.js';
+import { PasswordModule } from '#password/password.module.js';
 import { JwtStrategy } from './strategies/jwt.strategy.js';
-import { UserModule } from '../userModule/user.module.js';
+import { UserModule } from '#user/user.module.js';
+import { SessionCleanupService } from './clean-session.service.js';
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -20,7 +21,7 @@ import { UserModule } from '../userModule/user.module.js';
     PasswordModule,
     UserModule,
   ],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, SessionCleanupService],
   controllers: [AuthController],
   exports: [AuthService],
 })

@@ -1,10 +1,7 @@
 import { Request as ExpressRequest } from 'express';
-import { AuthenticatedUser } from '#auth/types/user.js';
+
 export interface Request extends ExpressRequest {
   cookies: {
     deviceId?: string;
-    refreshToken?: string;
-    accessToken?: string;
   };
-  user: AuthenticatedUser;
 }
