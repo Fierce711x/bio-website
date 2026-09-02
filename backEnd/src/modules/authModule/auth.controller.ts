@@ -43,8 +43,8 @@ export class AuthController {
   @Post('login')
   async login(
     @Body() loginDto: LoginDto,
-    @Res() res: Response,
     @Req() req: Request,
+    @Res() res: Response,
   ) {
     const { accessToken, refreshToken } = await this.authService.login(
       loginDto,
@@ -62,8 +62,8 @@ export class AuthController {
   @Post('signup')
   async signup(
     @Body() createUserDto: CreateUserDto,
-    @Res() res: Response,
     @Req() req: Request,
+    @Res() res: Response,
   ) {
     const { accessToken, refreshToken } = await this.authService.signup(
       createUserDto,
@@ -92,9 +92,9 @@ export class AuthController {
   @Post('logout')
   @UseGuards(JwtAuthGuard)
   async logoutCurrentDevice(
-    @Res() res: Response,
     @CurrentUser('id') userId: string,
     @Req() req: Request,
+    @Res() res: Response,
   ) {
     await this.authService.logoutDevice(userId, req.cookies.deviceId);
 
@@ -102,6 +102,13 @@ export class AuthController {
 
     return res.status(200).json({ message: 'Logged out successfully' });
   }
+  @Post('logout/all')
+  @UseGuards(JwtAuthGuard)
+  async logoutAllDevices(@CurrentUser('id') userId: string) {
+    await this.authService.logoutAllDevices(userId);
+    return { message: 'logged out of all devices successfully' };
+  }
+
   @Post('logout/:deviceId')
   @UseGuards(JwtAuthGuard)
   async logoutDevice(
@@ -110,12 +117,5 @@ export class AuthController {
   ) {
     await this.authService.logoutDevice(userId, deviceId);
     return { message: 'logged out of the device successfully' };
-  }
-
-  @Post('logout/all')
-  @UseGuards(JwtAuthGuard)
-  async logoutAllDevices(@CurrentUser('id') userId: string) {
-    await this.authService.logoutAllDevices(userId);
-    return { message: 'logged out of all devices successfully' };
   }
 }

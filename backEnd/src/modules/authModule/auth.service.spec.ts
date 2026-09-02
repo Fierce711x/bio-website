@@ -110,7 +110,7 @@ describe('AuthService', () => {
         jest.fn<
           (obj: {
             where: { userId_deviceId: { userId: string; deviceId: string } };
-          }) => Promise<usedRefreshToken | null>
+          }) => Promise<(usedRefreshToken & { session: Session }) | null>
         >(),
     },
   };
@@ -223,6 +223,21 @@ describe('AuthService', () => {
       });
       expect(prisma.usedRefreshToken.create).not.toHaveBeenCalled();
     });
+    it('should not delete the session when a reused token is presented from a different device', async () => {
+      prisma.session.findUnique.mockResolvedValue({
+        ...mockSession,
+        expiresAt: new Date(Date.now() + 60000),
+      });
+      prisma.usedRefreshToken.findUnique.mockResolvedValue({
+        ...mockUsedRefreshToken,
+        session: { ...mockSession, deviceId: 'device-2' },
+      });
+      prisma.session.updateMany.mockResolvedValue({ count: 0 });
+      await expect(
+        service.refresh('refresh-token', 'device-1'),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(prisma.session.delete).not.toHaveBeenCalled();
+    });
     it('should successfully update the session and add old refresh token to used refresh tokens', async () => {
       prisma.session.findUnique.mockResolvedValue({
         ...mockSession,
@@ -255,6 +270,48 @@ describe('AuthService', () => {
       expect(jwtService.signAsync).toHaveBeenCalledWith({
         sub: 'user-1',
       });
+    });
+  });
+
+  describe('handleInvalidOrReusedRefreshToken', () => {
+    it('should delete the session and throw unauthorized when the used token belongs to the same device', async () => {
+      prisma.usedRefreshToken.findUnique.mockResolvedValue(
+        mockUsedRefreshToken,
+      );
+      await expect(
+        service.handleInvalidOrReusedRefreshToken(
+          'refreshToken-hash',
+          'device-1',
+        ),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(prisma.session.delete).toHaveBeenCalledWith({
+        where: { id: 'session-1' },
+      });
+    });
+
+    it('should not delete the session when the used token belongs to a different device', async () => {
+      prisma.usedRefreshToken.findUnique.mockResolvedValue({
+        ...mockUsedRefreshToken,
+        session: { ...mockSession, deviceId: 'device-2' },
+      });
+      await expect(
+        service.handleInvalidOrReusedRefreshToken(
+          'refreshToken-hash',
+          'device-1',
+        ),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(prisma.session.delete).not.toHaveBeenCalled();
+    });
+
+    it('should not delete the session when the token is not a used refresh token', async () => {
+      prisma.usedRefreshToken.findUnique.mockResolvedValue(null);
+      await expect(
+        service.handleInvalidOrReusedRefreshToken(
+          'refreshToken-hash',
+          'device-1',
+        ),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(prisma.session.delete).not.toHaveBeenCalled();
     });
   });
 
@@ -386,6 +443,22 @@ describe('AuthService', () => {
         },
       });
     });
+    it('should throw when REFRESH_TOKEN_EXPIRES_IN_DAYS config is missing', async () => {
+      userService.findUserByIdentifier.mockResolvedValue({
+        id: 'user-1',
+        password: 'hashed-password',
+      });
+      passwordService.compare.mockResolvedValue(true);
+      jwtService.signAsync.mockResolvedValue('access-token');
+      configService.getOrThrow.mockImplementation(() => {
+        throw new Error('REFRESH_TOKEN_EXPIRES_IN_DAYS not found');
+      });
+      await expect(service.login(mockLoginData, 'device-1')).rejects.toThrow(
+        Error,
+      );
+      expect(prisma.session.findUnique).not.toHaveBeenCalled();
+      configService.getOrThrow.mockReset();
+    });
   });
 
   describe('signup', () => {
@@ -429,6 +502,25 @@ describe('AuthService', () => {
         grade: 'SEC_3',
       });
       expect(jwtService.signAsync).toHaveBeenCalledWith({ sub: 'user-1' });
+    });
+    it('should throw when REFRESH_TOKEN_EXPIRES_IN_DAYS config is missing', async () => {
+      userService.createUser.mockResolvedValue({
+        id: 'user-1',
+        username: 'username',
+        email: 'test@gmail.com',
+        password: 'password',
+        createdAt: new Date(),
+        role: 'STUDENT',
+      });
+      jwtService.signAsync.mockResolvedValue('access-token');
+      configService.getOrThrow.mockImplementation(() => {
+        throw new Error('REFRESH_TOKEN_EXPIRES_IN_DAYS not found');
+      });
+      await expect(service.signup(mockSignupData, 'device-1')).rejects.toThrow(
+        Error,
+      );
+      expect(prisma.session.create).not.toHaveBeenCalled();
+      configService.getOrThrow.mockReset();
     });
 
     it('creates a user and a session and signups the user', async () => {
