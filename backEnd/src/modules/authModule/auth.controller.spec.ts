@@ -310,12 +310,15 @@ describe('AuthController', () => {
   describe('logoutDevice', () => {
     it('should logout from a specific device', async () => {
       authService.logoutDevice.mockResolvedValue(undefined);
+      const res = createResponse();
 
       await expect(
-        controller.logoutDevice('user-1', 'device-2'),
-      ).resolves.toEqual({
-        message: 'logged out of the device successfully',
-      });
+        controller.logoutDevice(
+          'user-1',
+          'device-2',
+          res as unknown as Response,
+        ),
+      ).resolves.toEqual(res);
 
       expect(authService.logoutDevice).toHaveBeenCalledWith(
         'user-1',
@@ -325,9 +328,14 @@ describe('AuthController', () => {
 
     it('should not logout from a specific device when logoutDevice fails', async () => {
       authService.logoutDevice.mockRejectedValue(new Error());
+      const res = createResponse();
 
       await expect(
-        controller.logoutDevice('user-1', 'device-2'),
+        controller.logoutDevice(
+          'user-1',
+          'device-2',
+          res as unknown as Response,
+        ),
       ).rejects.toThrow(Error);
 
       expect(authService.logoutDevice).toHaveBeenCalledWith(
@@ -340,19 +348,21 @@ describe('AuthController', () => {
   describe('logoutAllDevices', () => {
     it('should logout from all devices', async () => {
       authService.logoutAllDevices.mockResolvedValue(undefined);
+      const res = createResponse();
 
-      await expect(controller.logoutAllDevices('user-1')).resolves.toEqual({
-        message: 'logged out of all devices successfully',
-      });
+      await expect(
+        controller.logoutAllDevices('user-1', res as unknown as Response),
+      ).resolves.toEqual(res);
 
       expect(authService.logoutAllDevices).toHaveBeenCalledWith('user-1');
     });
     it('should not logout from all device when logoutAllDevices fails', async () => {
       authService.logoutAllDevices.mockRejectedValue(new Error());
+      const res = createResponse();
 
-      await expect(controller.logoutAllDevices('user-1')).rejects.toThrow(
-        Error,
-      );
+      await expect(
+        controller.logoutAllDevices('user-1', res as unknown as Response),
+      ).rejects.toThrow(Error);
 
       expect(authService.logoutAllDevices).toHaveBeenCalledWith('user-1');
     });

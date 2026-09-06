@@ -203,7 +203,6 @@ export class AuthService {
 
   async signup(createUserDto: CreateUserDto, deviceId: string | undefined) {
     if (!deviceId) throw new BadRequestException('no device id');
-
     const { id: userId } = await this.userService.createUser(createUserDto);
     const accessToken = await this.jwtService.signAsync({
       sub: userId,
