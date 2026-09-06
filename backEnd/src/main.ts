@@ -14,7 +14,6 @@ async function bootstrap() {
           property: error.property,
           reason: Object.values(error.constraints ?? {}),
         }));
-        console.log(formatedErrors);
         return new BadRequestException(formatedErrors);
       },
     }),

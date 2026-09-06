@@ -7,6 +7,7 @@ import {
   UseGuards,
   Req,
   Param,
+  Delete,
 } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
@@ -89,7 +90,7 @@ export class AuthController {
     };
   }
 
-  @Post('logout')
+  @Delete('logout')
   @UseGuards(JwtAuthGuard)
   async logoutCurrentDevice(
     @CurrentUser('id') userId: string,
@@ -102,20 +103,28 @@ export class AuthController {
 
     return res.status(200).json({ message: 'Logged out successfully' });
   }
-  @Post('logout/all')
+  @Delete('logout/all')
   @UseGuards(JwtAuthGuard)
-  async logoutAllDevices(@CurrentUser('id') userId: string) {
+  async logoutAllDevices(
+    @CurrentUser('id') userId: string,
+    @Res() res: Response,
+  ) {
     await this.authService.logoutAllDevices(userId);
-    return { message: 'logged out of all devices successfully' };
+    return res
+      .status(200)
+      .json({ message: 'logged out of all devices successfully' });
   }
 
-  @Post('logout/:deviceId')
+  @Delete('logout/:deviceId')
   @UseGuards(JwtAuthGuard)
   async logoutDevice(
     @CurrentUser('id') userId: string,
     @Param('deviceId') deviceId: string,
+    @Res() res: Response,
   ) {
     await this.authService.logoutDevice(userId, deviceId);
-    return { message: 'logged out of the device successfully' };
+    return res
+      .status(200)
+      .json({ message: 'logged out of the device successfully' });
   }
 }
