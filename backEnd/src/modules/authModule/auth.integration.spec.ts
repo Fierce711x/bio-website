@@ -320,49 +320,6 @@ describe('AuthModule Integration', () => {
     });
   });
 
-  describe('signup', () => {
-    it('should singup a new user', async () => {
-      const response = await request(server)
-        .post('/auth/signup')
-        .send(userData);
-      expect(response.status).toBe(201);
-    });
-    it('should reject with duplicate username or email', async () => {
-      const response = await request(server)
-        .post('/auth/signup')
-        .send(userData);
-      expect(response.status).toBe(400);
-    });
-    it('should reject invalid signup data before creating the user', async () => {
-      const authService = moduleRef.get(AuthService);
-      const signupSpy = jest.spyOn(authService, 'signup');
-      const response = await request(server).post('/auth/signup').send({
-        username: 'short',
-        email: 'invalid-email',
-        grade: 'INVALID_GRADE',
-        phone: '12345',
-        password: 'weak',
-      });
-
-      const body = response.body as ErrorResponse;
-      expect(response.status).toBe(400);
-      expect(body.statusCode).toBe(400);
-      expect(body.message).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            property: expect.any(String),
-            reason: expect.any(Array),
-          }),
-        ]),
-      );
-      expect(signupSpy).not.toHaveBeenCalled();
-      signupSpy.mockRestore();
-    });
-    afterAll(async () => {
-      await prisma.user.delete({ where: { email: userData.email } });
-    });
-  });
-
   describe('login', () => {
     let user: User;
     let deviceId: string;
@@ -526,6 +483,49 @@ describe('AuthModule Integration', () => {
     });
     afterAll(async () => {
       await prisma.user.delete({ where: { id: user.id } });
+    });
+  });
+
+  describe('signup', () => {
+    it('should signup a new user', async () => {
+      const response = await request(server)
+        .post('/auth/signup')
+        .send(userData);
+      expect(response.status).toBe(201);
+    });
+    it('should reject with duplicate username or email', async () => {
+      const response = await request(server)
+        .post('/auth/signup')
+        .send(userData);
+      expect(response.status).toBe(400);
+    });
+    it('should reject invalid signup data before creating the user', async () => {
+      const authService = moduleRef.get(AuthService);
+      const signupSpy = jest.spyOn(authService, 'signup');
+      const response = await request(server).post('/auth/signup').send({
+        username: 'short',
+        email: 'invalid-email',
+        grade: 'INVALID_GRADE',
+        phone: '12345',
+        password: 'weak',
+      });
+
+      const body = response.body as ErrorResponse;
+      expect(response.status).toBe(400);
+      expect(body.statusCode).toBe(400);
+      expect(body.message).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            property: expect.any(String),
+            reason: expect.any(Array),
+          }),
+        ]),
+      );
+      expect(signupSpy).not.toHaveBeenCalled();
+      signupSpy.mockRestore();
+    });
+    afterAll(async () => {
+      await prisma.user.delete({ where: { email: userData.email } });
     });
   });
 
