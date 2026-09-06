@@ -12,7 +12,10 @@ import type { Server } from 'node:http';
 import { PrismaService } from '#prisma/prisma.service.js';
 import { AuthService } from './auth.service.js';
 import { ErrorResponse } from '#src/types/response.js';
+import { User } from '#src/generated/client.js';
 import { CreateUserDto } from '#user/dto/createUser.dto.js';
+import { JwtService } from '@nestjs/jwt';
+import crypto from 'node:crypto';
 
 describe('AuthModule Integration', () => {
   const userData: CreateUserDto = {
@@ -22,6 +25,7 @@ describe('AuthModule Integration', () => {
     phone: '01002265987',
     password: 'Password123',
   };
+  let jwtService: JwtService;
   let moduleRef: TestingModule;
   let app: INestApplication<Server>;
   let server: Server;
@@ -31,6 +35,7 @@ describe('AuthModule Integration', () => {
       imports: [AppModule],
     }).compile();
     prisma = moduleRef.get(PrismaService);
+    jwtService = moduleRef.get(JwtService);
     app = moduleRef.createNestApplication();
     app.useGlobalPipes(
       new ValidationPipe({
@@ -90,6 +95,139 @@ describe('AuthModule Integration', () => {
     });
     afterAll(async () => {
       await prisma.user.delete({ where: { email: userData.email } });
+    });
+  });
+  describe('logout', () => {
+    let user: User;
+    const deviceIds: string[] = [];
+    let accessToken: string;
+    beforeAll(async () => {
+      user = await prisma.user.create({
+        data: {
+          username: userData.username,
+          password: userData.password,
+          email: userData.email,
+          student: {
+            create: {
+              grade: userData.grade,
+              phone: userData.phone,
+            },
+          },
+        },
+      });
+
+      accessToken = await jwtService.signAsync({
+        sub: user.id,
+        role: 'STUDENT',
+      });
+      const sessionData = [];
+      for (let i = 0; i < 4; i++) {
+        const deviceId = crypto.randomUUID();
+        const refreshToken = crypto.randomBytes(32).toString('hex');
+        const refreshTokenHash = crypto
+          .createHash('sha256')
+          .update(refreshToken)
+          .digest('hex');
+        deviceIds.push(deviceId);
+        sessionData.push({
+          userId: user.id,
+          deviceId,
+          tokenHash: refreshTokenHash,
+          expiresAt: new Date(Date.now() + 86_400_000),
+        });
+      }
+      await prisma.session.createManyAndReturn({
+        data: sessionData,
+      });
+    });
+    describe('logoutCurrentDevice', () => {
+      it('logout a device using its deviceId', async () => {
+        const response = await request(server)
+          .delete('/auth/logout')
+          .set('Cookie', [
+            `deviceId=${deviceIds[0]}`,
+            `accessToken=${accessToken}`,
+            'refreshToken=refresh-1',
+          ]);
+        expect(response.status).toBe(200);
+        expect(response.headers['set-cookie']).toEqual(
+          expect.arrayContaining([
+            expect.stringContaining('accessToken=;'),
+            expect.stringContaining('refreshToken=;'),
+          ]),
+        );
+        const session = await prisma.session.findUnique({
+          where: {
+            userId_deviceId: {
+              userId: user.id,
+              deviceId: deviceIds[0],
+            },
+          },
+        });
+        const remainingSessions = await prisma.session.count({
+          where: {
+            userId: user.id,
+          },
+        });
+        expect(session).toBeNull();
+        expect(remainingSessions).toBe(3);
+      });
+    });
+
+    describe('logoutDevice', () => {
+      it('should logout a specific device using its deviceId', async () => {
+        const response = await request(server)
+          .delete(`/auth/logout/${deviceIds[1]}`)
+          .set('Cookie', [
+            `deviceId=${deviceIds[2]}`,
+            `accessToken=${accessToken}`,
+          ]);
+
+        expect(response.status).toBe(200);
+
+        expect(response.headers['set-cookie']).toBeUndefined();
+
+        const session = await prisma.session.findUnique({
+          where: {
+            userId_deviceId: {
+              userId: user.id,
+              deviceId: deviceIds[1],
+            },
+          },
+        });
+
+        expect(session).toBeNull();
+
+        const remainingSessions = await prisma.session.count({
+          where: { userId: user.id },
+        });
+
+        expect(remainingSessions).toBe(2);
+      });
+    });
+
+    describe('logoutAllDevices', () => {
+      it('should logout all devices', async () => {
+        const response = await request(server)
+          .delete('/auth/logout/all')
+          .set('Cookie', [
+            `deviceId=${deviceIds[2]}`,
+            `accessToken=${accessToken}`,
+          ]);
+
+        expect(response.status).toBe(200);
+
+        expect(response.headers['set-cookie']).toBeUndefined();
+
+        const remainingSessions = await prisma.session.count({
+          where: { userId: user.id },
+        });
+
+        expect(remainingSessions).toBe(0);
+      });
+    });
+    afterAll(async () => {
+      await prisma.user.delete({ where: { id: user.id } });
     });
   });
   afterAll(async () => {
