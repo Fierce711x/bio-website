@@ -16,6 +16,7 @@ import { User } from '#src/generated/client.js';
 import { CreateUserDto } from '#user/dto/createUser.dto.js';
 import { JwtService } from '@nestjs/jwt';
 import crypto from 'node:crypto';
+import { PasswordService } from '../passwordModule/password.service.js';
 
 describe('AuthModule Integration', () => {
   const userData: CreateUserDto = {
@@ -30,12 +31,14 @@ describe('AuthModule Integration', () => {
   let app: INestApplication<Server>;
   let server: Server;
   let prisma: PrismaService;
+  let passwordService: PasswordService;
   beforeAll(async () => {
     moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
     prisma = moduleRef.get(PrismaService);
     jwtService = moduleRef.get(JwtService);
+    passwordService = moduleRef.get(PasswordService);
     app = moduleRef.createNestApplication();
     app.useGlobalPipes(
       new ValidationPipe({
@@ -97,15 +100,183 @@ describe('AuthModule Integration', () => {
       await prisma.user.delete({ where: { email: userData.email } });
     });
   });
+
+  describe('login', () => {
+    let user: User;
+    let deviceId: string;
+    beforeAll(async () => {
+      const hashedPassword = await passwordService.hash(userData.password);
+      user = await prisma.user.create({
+        data: {
+          username: userData.username,
+          password: hashedPassword,
+          email: userData.email,
+          student: {
+            create: {
+              grade: userData.grade,
+              phone: userData.phone,
+            },
+          },
+        },
+      });
+    });
+    it('should login successfully and create a session for a new device', async () => {
+      deviceId = crypto.randomUUID();
+      const authService = moduleRef.get(AuthService);
+      const loginSpy = jest.spyOn(authService, 'login');
+      const response = await request(server)
+        .post('/auth/login')
+        .set('Cookie', [`deviceId=${deviceId}`])
+        .send({
+          identifier: userData.email,
+          password: userData.password,
+        });
+      expect(response.status).toBe(200);
+
+      expect(response.body).toEqual({
+        message: 'Logged in successfully',
+      });
+
+      expect(response.headers['set-cookie']).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining('accessToken='),
+          expect.stringContaining('refreshToken='),
+        ]),
+      );
+
+      const { refreshToken } = (await loginSpy.mock.results[0].value) as {
+        accessToken: string;
+        refreshToken: string;
+      };
+      const refreshTokenHash = crypto
+        .createHash('sha256')
+        .update(refreshToken)
+        .digest('hex');
+
+      const session = await prisma.session.findUnique({
+        where: {
+          userId_deviceId: {
+            userId: user.id,
+            deviceId,
+          },
+        },
+      });
+
+      expect(session).not.toBeNull();
+      expect(session?.userId).toBe(user.id);
+      expect(session?.deviceId).toBe(deviceId);
+      expect(session?.tokenHash).toEqual(refreshTokenHash);
+      loginSpy.mockRestore();
+    });
+    it('should update the existing session and delete used refresh tokens', async () => {
+      const oldSession = await prisma.session.findUnique({
+        where: {
+          userId_deviceId: {
+            userId: user.id,
+            deviceId,
+          },
+        },
+      });
+
+      expect(oldSession).not.toBeNull();
+
+      const usedToken = crypto.randomBytes(32).toString('hex');
+
+      await prisma.usedRefreshToken.create({
+        data: {
+          tokenHash: crypto
+            .createHash('sha256')
+            .update(usedToken)
+            .digest('hex'),
+          sessionId: oldSession!.id,
+        },
+      });
+
+      const authService = moduleRef.get(AuthService);
+      const loginSpy = jest.spyOn(authService, 'login');
+
+      const response = await request(server)
+        .post('/auth/login')
+        .set('Cookie', [`deviceId=${deviceId}`])
+        .send({
+          identifier: userData.email,
+          password: userData.password,
+        });
+
+      expect(response.status).toBe(200);
+
+      expect(response.body).toEqual({
+        message: 'Logged in successfully',
+      });
+
+      const { refreshToken } = (await loginSpy.mock.results[0].value) as {
+        accessToken: string;
+        refreshToken: string;
+      };
+
+      const newTokenHash = crypto
+        .createHash('sha256')
+        .update(refreshToken)
+        .digest('hex');
+
+      const updatedSession = await prisma.session.findUnique({
+        where: {
+          userId_deviceId: {
+            userId: user.id,
+            deviceId,
+          },
+        },
+      });
+
+      expect(updatedSession!.id).toBe(oldSession!.id);
+      expect(updatedSession!.tokenHash).toBe(newTokenHash);
+
+      const usedRefreshToken = await prisma.usedRefreshToken.findMany({
+        where: {
+          sessionId: updatedSession!.id,
+        },
+      });
+
+      expect(usedRefreshToken.length).toBe(0);
+
+      loginSpy.mockRestore();
+    });
+    it('should successfully handle concurrent logins on the same device', async () => {
+      const [response1, response2] = await Promise.all([
+        request(server)
+          .post('/auth/login')
+          .set('Cookie', [`deviceId=${deviceId}`])
+          .send({
+            identifier: userData.email,
+            password: userData.password,
+          }),
+
+        request(server)
+          .post('/auth/login')
+          .set('Cookie', [`deviceId=${deviceId}`])
+          .send({
+            identifier: userData.email,
+            password: userData.password,
+          }),
+      ]);
+      expect(response1.status).toBe(200);
+      expect(response2.status).toBe(200);
+    });
+    afterAll(async () => {
+      await prisma.user.delete({ where: { id: user.id } });
+    });
+  });
+
   describe('logout', () => {
     let user: User;
     const deviceIds: string[] = [];
     let accessToken: string;
     beforeAll(async () => {
+      const hashedPassword = await passwordService.hash(userData.password);
       user = await prisma.user.create({
         data: {
           username: userData.username,
-          password: userData.password,
+          password: hashedPassword,
           email: userData.email,
           student: {
             create: {
@@ -133,7 +304,7 @@ describe('AuthModule Integration', () => {
           userId: user.id,
           deviceId,
           tokenHash: refreshTokenHash,
-          expiresAt: new Date(Date.now() + 86_400_000),
+          expiresAt: new Date(Date.now() + 60 * 60 * 1000),
         });
       }
       await prisma.session.createManyAndReturn({

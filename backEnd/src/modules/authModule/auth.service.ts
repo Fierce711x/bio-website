@@ -54,7 +54,6 @@ export class AuthService {
   ) {
     if (!deviceId) throw new BadRequestException('no device id');
     if (!refreshToken) throw new UnauthorizedException('invalid refresh token');
-
     const refreshTokenHash = crypto
       .createHash('sha256')
       .update(refreshToken)
@@ -134,7 +133,6 @@ export class AuthService {
     );
 
     if (!validPassword) throw new UnauthorizedException('invalid credentials');
-
     const accessToken = await this.jwtService.signAsync({
       sub: userId,
     });
