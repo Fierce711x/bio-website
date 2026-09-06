@@ -58,6 +58,268 @@ describe('AuthModule Integration', () => {
     server = app.getHttpServer();
   });
 
+  describe('refresh', () => {
+    let user: User;
+    let deviceId: string;
+    let refreshToken: string;
+    beforeAll(async () => {
+      const hashedPassword = await passwordService.hash(userData.password);
+
+      user = await prisma.user.create({
+        data: {
+          username: userData.username,
+          password: hashedPassword,
+          email: userData.email,
+          student: {
+            create: {
+              grade: userData.grade,
+              phone: userData.phone,
+            },
+          },
+        },
+      });
+
+      deviceId = crypto.randomUUID();
+      refreshToken = crypto.randomBytes(32).toString('hex');
+      const refreshTokenHash = crypto
+        .createHash('sha256')
+        .update(refreshToken)
+        .digest('hex');
+
+      await prisma.session.create({
+        data: {
+          userId: user.id,
+          deviceId: deviceId,
+          tokenHash: refreshTokenHash,
+          expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+        },
+      });
+    });
+
+    it('should reject an invalid refresh token without deleting the session', async () => {
+      const invalidRefreshToken = crypto.randomBytes(32).toString('hex');
+
+      const response = await request(server)
+        .post('/auth/refresh')
+        .set('Cookie', [
+          `deviceId=${deviceId}`,
+          `refreshToken=${invalidRefreshToken}`,
+        ]);
+
+      expect(response.status).toBe(401);
+
+      const session = await prisma.session.findUnique({
+        where: {
+          userId_deviceId: {
+            userId: user.id,
+            deviceId,
+          },
+        },
+      });
+      const refreshTokenHash = crypto
+        .createHash('sha256')
+        .update(refreshToken)
+        .digest('hex');
+      expect(session).not.toBeNull();
+      expect(session?.tokenHash).toBe(refreshTokenHash);
+    });
+
+    it('should refresh the tokens successfully', async () => {
+      const authService = moduleRef.get(AuthService);
+      const refreshSpy = jest.spyOn(authService, 'refresh');
+      const response = await request(server)
+        .post('/auth/refresh')
+        .set('Cookie', [
+          `deviceId=${deviceId}`,
+          `refreshToken=${refreshToken}`,
+        ]);
+
+      expect(response.status).toBe(200);
+
+      expect(response.body).toEqual({
+        message: 'token refreshed successfully',
+      });
+
+      expect(response.headers['set-cookie']).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining('accessToken='),
+          expect.stringContaining('refreshToken='),
+        ]),
+      );
+
+      const { newRefreshToken } = (await refreshSpy.mock.results[0].value) as {
+        accessToken: string;
+        newRefreshToken: string;
+      };
+      const newRefreshTokenHash = crypto
+        .createHash('sha256')
+        .update(newRefreshToken)
+        .digest('hex');
+
+      const session = await prisma.session.findUnique({
+        where: {
+          userId_deviceId: {
+            userId: user.id,
+            deviceId: deviceId,
+          },
+        },
+      });
+
+      expect(session).not.toBeNull();
+      expect(session!.tokenHash).toBe(newRefreshTokenHash);
+
+      const oldRefreshTokenHash = crypto
+        .createHash('sha256')
+        .update(refreshToken)
+        .digest('hex');
+      const usedRefreshToken = await prisma.usedRefreshToken.findUnique({
+        where: {
+          tokenHash: oldRefreshTokenHash,
+        },
+      });
+      expect(usedRefreshToken).not.toBeNull();
+      expect(usedRefreshToken?.sessionId).toBe(session?.id);
+    });
+
+    it('should reject an expired session and delete it', async () => {
+      const expiredDeviceId = crypto.randomUUID();
+      const expiredRefreshToken = crypto.randomBytes(32).toString('hex');
+      const expiredRefreshTokenHash = crypto
+        .createHash('sha256')
+        .update(expiredRefreshToken)
+        .digest('hex');
+
+      await prisma.session.create({
+        data: {
+          userId: user.id,
+          deviceId: expiredDeviceId,
+          tokenHash: expiredRefreshTokenHash,
+          expiresAt: new Date(Date.now() - 60 * 60 * 1000),
+        },
+      });
+
+      const response = await request(server)
+        .post('/auth/refresh')
+        .set('Cookie', [
+          `deviceId=${expiredDeviceId}`,
+          `refreshToken=${expiredRefreshToken}`,
+        ]);
+
+      expect(response.status).toBe(401);
+
+      const session = await prisma.session.findUnique({
+        where: {
+          userId_deviceId: {
+            userId: user.id,
+            deviceId: expiredDeviceId,
+          },
+        },
+      });
+
+      expect(session).toBeNull();
+    });
+
+    it('should reject a reused refresh token from a different device without deleting the session', async () => {
+      const differentDeviceId = crypto.randomUUID();
+
+      const response = await request(server)
+        .post('/auth/refresh')
+        .set('Cookie', [
+          `deviceId=${differentDeviceId}`,
+          `refreshToken=${refreshToken}`,
+        ]);
+
+      expect(response.status).toBe(401);
+
+      const session = await prisma.session.findUnique({
+        where: {
+          userId_deviceId: {
+            userId: user.id,
+            deviceId,
+          },
+        },
+      });
+
+      expect(session).not.toBeNull();
+    });
+
+    it('should reject a reused refresh token and delete the session', async () => {
+      const response = await request(server)
+        .post('/auth/refresh')
+        .set('Cookie', [
+          `deviceId=${deviceId}`,
+          `refreshToken=${refreshToken}`,
+        ]);
+
+      expect(response.status).toBe(401);
+
+      const session = await prisma.session.findUnique({
+        where: {
+          userId_deviceId: {
+            userId: user.id,
+            deviceId,
+          },
+        },
+      });
+
+      expect(session).toBeNull();
+    });
+
+    it('should handle concurrent refresh requests using the same refresh token', async () => {
+      const raceDeviceId = crypto.randomUUID();
+      const raceRefreshToken = crypto.randomBytes(32).toString('hex');
+
+      const raceRefreshTokenHash = crypto
+        .createHash('sha256')
+        .update(raceRefreshToken)
+        .digest('hex');
+
+      await prisma.session.create({
+        data: {
+          userId: user.id,
+          deviceId: raceDeviceId,
+          tokenHash: raceRefreshTokenHash,
+          expiresAt: new Date(Date.now() + 60_000),
+        },
+      });
+
+      const [response1, response2] = await Promise.all([
+        request(server)
+          .post('/auth/refresh')
+          .set('Cookie', [
+            `deviceId=${raceDeviceId}`,
+            `refreshToken=${raceRefreshToken}`,
+          ]),
+
+        request(server)
+          .post('/auth/refresh')
+          .set('Cookie', [
+            `deviceId=${raceDeviceId}`,
+            `refreshToken=${raceRefreshToken}`,
+          ]),
+      ]);
+
+      expect(
+        [response1.status, response2.status].sort((a, b) => a - b),
+      ).toEqual([200, 401]);
+
+      const session = await prisma.session.findUnique({
+        where: {
+          userId_deviceId: {
+            userId: user.id,
+            deviceId: raceDeviceId,
+          },
+        },
+      });
+
+      expect(session).toBeNull();
+    });
+
+    afterAll(async () => {
+      await prisma.user.delete({ where: { id: user.id } });
+    });
+  });
+
   describe('signup', () => {
     it('should singup a new user', async () => {
       const response = await request(server)
