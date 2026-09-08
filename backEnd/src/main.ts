@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
-
+import { WsAdapter } from '@nestjs/platform-ws';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(
@@ -18,6 +18,7 @@ async function bootstrap() {
       },
     }),
   );
+  app.useWebSocketAdapter(new WsAdapter(app));
   app.use(cookieParser());
   app.enableCors({
     origin: 'http://localhost:5173',

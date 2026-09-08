@@ -19,19 +19,19 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
   async onModuleInit() {
     await this.$connect();
     console.log('db ready');
-    const tables = await this.$queryRaw<{ table_name: string }[]>`
-  SELECT table_name
-  FROM information_schema.tables
-  WHERE table_schema = 'public'
-`;
-    const result = await this.$queryRaw<{ database: string; schema: string }[]>`
-    SELECT
-      current_database() AS database,
-      current_schema() AS schema
-  `;
+    // const tables = await this.$queryRaw<{ table_name: string }[]>`
+    //   SELECT table_name
+    //   FROM information_schema.tables
+    //   WHERE table_schema = 'public'
+    // `;
+    // const result = await this.$queryRaw<{ database: string; schema: string }[]>`
+    //     SELECT
+    //       current_database() AS database,
+    //       current_schema() AS schema
+    //   `;
 
-    console.log('DB INFO:', result);
+    // console.log('DB INFO:', result);
 
-    console.log('TABLES:', tables);
+    // console.log('TABLES:', tables);
   }
 }

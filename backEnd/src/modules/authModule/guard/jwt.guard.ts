@@ -12,6 +12,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     info: Error | undefined,
     context: ExecutionContext,
   ) {
+    // console.log(err);
+    // console.log(user);
+    // console.log(info);
     if (info && info.name === 'TokenExpiredError') {
       const response = context.switchToHttp().getResponse<Response>();
       response.clearCookie('accessToken', {
