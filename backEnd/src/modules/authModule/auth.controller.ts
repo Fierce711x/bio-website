@@ -19,6 +19,7 @@ import type { AuthenticatedUser } from './types/user.js';
 import { ConfigService } from '@nestjs/config';
 import type { Request } from '#src/types/request.js';
 import { setAuthCookies, clearAuthCookies } from './utils/authCookies.js';
+import { ConnectionsGuard } from './guard/connection.guard.js';
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -80,7 +81,7 @@ export class AuthController {
   }
 
   @Get('me')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ConnectionsGuard)
   me(@CurrentUser() user: AuthenticatedUser) {
     const { id, username, role } = user;
     return {
@@ -91,7 +92,7 @@ export class AuthController {
   }
 
   @Delete('logout')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ConnectionsGuard)
   async logoutCurrentDevice(
     @CurrentUser('id') userId: string,
     @Req() req: Request,
@@ -104,7 +105,7 @@ export class AuthController {
     return res.status(200).json({ message: 'Logged out successfully' });
   }
   @Delete('logout/all')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ConnectionsGuard)
   async logoutAllDevices(
     @CurrentUser('id') userId: string,
     @Res() res: Response,
@@ -116,7 +117,7 @@ export class AuthController {
   }
 
   @Delete('logout/:deviceId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ConnectionsGuard)
   async logoutDevice(
     @CurrentUser('id') userId: string,
     @Param('deviceId') deviceId: string,

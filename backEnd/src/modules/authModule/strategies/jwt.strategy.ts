@@ -5,11 +5,13 @@ import { ConfigService } from '@nestjs/config';
 import { UserService } from '#user/user.service.js';
 import { JwtPayload } from '#auth/types/jwt.js';
 import { Request } from '#src/types/request.js';
+import { PrismaService } from '#src/modules/prismaModule/prisma.service.js';
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
-    configService: ConfigService,
+    private readonly configService: ConfigService,
     private readonly userService: UserService,
+    private readonly prisma: PrismaService,
   ) {
     super({
       jwtFromRequest: (req: Request) => {
@@ -21,12 +23,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload) {
-    const user = await this.userService.findUserById(payload.sub);
-    if (!user) throw new UnauthorizedException();
+    const session = await this.prisma.session.findUnique({
+      where: { id: payload.sessionId },
+      include: {
+        user: true,
+      },
+    });
+    if (!session || payload.sub !== session.userId)
+      throw new UnauthorizedException();
     return {
-      id: user.id,
-      username: user.username,
-      role: user.role,
+      id: session.user.id,
+      username: session.user.username,
+      role: session.user.role,
     };
   }
 }

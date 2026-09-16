@@ -7,6 +7,7 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "declaration": false,
+    "strictPropertyInitialization": false,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
@@ -27,7 +28,8 @@
       "#auth/*": ["./src/modules/authModule/*"],
       "#user/*": ["./src/modules/userModule/*"],
       "#prisma/*": ["./src/modules/prismaModule/*"],
-      "#password/*": ["./src/modules/passwordModule/*"]
+      "#password/*": ["./src/modules/passwordModule/*"],
+      "#ws/*": ["./src/modules/webSockets/*"]
     }
   }
 }

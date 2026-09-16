@@ -24,7 +24,7 @@ export default function AuthForm<T extends FieldValues>({ formFields, form, onSu
             } catch (err) {
               if (err instanceof ApiError) {
                 console.log(err.message);
-                console.log(err.statusCode);
+                console.log(err.status);
               }
             }
           },

@@ -2,9 +2,12 @@ import { Request as ExpressRequest } from 'express';
 import { AuthenticatedUser } from '#auth/types/user.js';
 export interface Request extends ExpressRequest {
   cookies: {
-    deviceId?: string;
-    refreshToken?: string;
-    accessToken?: string;
+    deviceId: string | undefined;
+    refreshToken: string | undefined;
+    accessToken: string | undefined;
   };
-  user: AuthenticatedUser;
+  user: AuthenticatedUser | undefined;
+  headers: {
+    'x-connection-id': string | undefined;
+  };
 }

@@ -40,9 +40,6 @@ export class UserService {
           },
         },
       },
-      include: {
-        student: true,
-      },
     });
     if (!user) throw new BadRequestException('create user failed');
 

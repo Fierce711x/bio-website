@@ -1,36 +1,19 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { AuthContext } from "../context/authContext";
-import type { AuthContextType } from "../types/contextTypes";
-import { loginRequest, logoutRequest, getCurrentUser, signupRequest } from "../api/auth";
-import type { LoginData, SignupData } from "../types/authTypes";
+import { AuthState, type AuthContextType } from "../types/contextTypes";
+import { connect } from "../api/auth";
 import { queryKeys } from "../../lib/react-query/queryKeys";
 import { Outlet } from "react-router";
+
 export default function AuthProvider() {
-  const { data: user = null, isLoading: loading } = useQuery({ queryKey: queryKeys.me, queryFn: getCurrentUser });
-  const queryClient = useQueryClient();
+  const { data: authState, isFetching: loading } = useQuery<AuthState>({ queryKey: queryKeys.ws, queryFn: connect });
 
-  function refreshUser() {
-    return queryClient.invalidateQueries({
-      queryKey: queryKeys.me,
-    });
-  }
+  // async function logout() {
+  //   await logoutRequest();
+  //   return refreshConnection();
+  // }
 
-  async function login(userData: LoginData) {
-    await loginRequest(userData);
-    return refreshUser();
-  }
-
-  async function logout() {
-    await logoutRequest();
-    return refreshUser();
-  }
-
-  async function signup(userData: SignupData) {
-    await signupRequest(userData);
-    return refreshUser();
-  }
-
-  const context: AuthContextType = { user, loading, refreshUser, logout, login, signup };
+  const context: AuthContextType = { authState, loading };
 
   return (
     <AuthContext.Provider value={context}>

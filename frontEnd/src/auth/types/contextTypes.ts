@@ -1,14 +1,9 @@
-import type { AuthUser } from "./userTypes";
-import type { LoginData, SignupData } from "./authTypes";
+export enum AuthState {
+  Authenticated = "Authenticated",
+  UnAuthenticate = "UnAuthenticate",
+  Unavailable = "Unavailable",
+}
 export interface AuthContextType {
-  user: AuthUser | null;
+  authState: AuthState | undefined;
   loading: boolean;
-
-  login(userData: LoginData): Promise<void>;
-
-  signup(userData: SignupData): Promise<void>;
-
-  logout(): Promise<void>;
-
-  refreshUser(): Promise<void>;
 }

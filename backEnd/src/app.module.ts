@@ -9,8 +9,8 @@ import { AuthModule } from './modules/authModule/auth.module.js';
 import { ScheduleModule } from '@nestjs/schedule';
 import { DeviceIdMiddleware } from './middleware/deviceId.middleware.js';
 import { AuthController } from './modules/authModule/auth.controller.js';
-import { AppGateway } from './webSockets/webSocket.gateway.js';
 import { JwtSharedModule } from '#src/modules/sharedJwtModule/jwtShared.module.js';
+import { GateWay } from './modules/webSockets/gateway.module.js';
 @Module({
   imports: [
     UserModule,
@@ -20,9 +20,10 @@ import { JwtSharedModule } from '#src/modules/sharedJwtModule/jwtShared.module.j
     AuthModule,
     ScheduleModule.forRoot(),
     JwtSharedModule,
+    GateWay,
   ],
   controllers: [AppController],
-  providers: [AppService, AppGateway],
+  providers: [AppService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

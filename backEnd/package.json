@@ -129,6 +129,9 @@
     ],
     "#password/*": [
       "./dist/src/modules/passwordModule/*"
+    ],
+    "#ws/*": [
+      "./dist/src/modules/webSockets/*"
     ]
   }
 }
