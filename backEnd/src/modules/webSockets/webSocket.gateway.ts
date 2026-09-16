@@ -128,12 +128,23 @@ export class AppGateway
         JSON.stringify({ event: 'session-authorized', data: { connectionId } }),
       );
       this.logger.log(`Connected user: ${socket.user.username}`);
-
-      socket.off('close', handleAbort);
     } catch (err) {
-      if (!(err instanceof Error) || !(err.message === 'action aborted'))
+      if (
+        socket.user &&
+        this.connectionsStorage.getConnection(socket.user.id) === socket
+      ) {
+        this.connectionsStorage.deleteConnection(socket.user.id);
+      }
+
+      if (err instanceof Error && err.message === 'action aborted') {
         this.logger.error(err);
-      socket.close(4001, 'Unauthorized');
+      }
+
+      if (socket.readyState === socket.OPEN) {
+        socket.close(4001, 'Unauthorized');
+      }
+    } finally {
+      socket.off('close', handleAbort);
     }
   }
 

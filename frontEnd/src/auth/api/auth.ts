@@ -88,6 +88,7 @@ export const connectWS = (() => {
       let authorized: boolean = false;
       connectionPromise = new Promise<boolean>((res, rej) => {
         const ws = new WebSocket("ws://localhost:3000/connect");
+        // const ws = new WebSocket("ws://192.168.1.23:3000/connect");
         connectionTimeout = setTimeout(() => {
           connectionTimeout = null;
           ws.close(4005, "aborted");
