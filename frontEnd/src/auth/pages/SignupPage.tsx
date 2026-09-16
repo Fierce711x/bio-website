@@ -1,5 +1,4 @@
 import { useLocation } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
 import type { SignupData } from "../types/authTypes";
 import { useNavigate } from "react-router-dom";
 import type { RedirectLocation } from "../../lib/react-router/types";
@@ -7,21 +6,26 @@ import AuthForm from "../../components/AuthForm";
 import { SignupSchema } from "../../lib/zod/AuthSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-
+import { authApi } from "../api/auth";
+import { refreshConnection } from "../../lib/react-query/queryClient";
 export default function SignupPage() {
   const form = useForm<SignupData>({ resolver: zodResolver(SignupSchema), mode: "onBlur" });
   const location = useLocation();
-  const { signup } = useAuth();
   const navigate = useNavigate();
   const redirect: RedirectLocation = location.state?.from ?? {
-    pathname: "/",
+    pathname: "/dashboard",
     search: "",
     hash: "",
   };
 
   async function handleSignup(userData: SignupData) {
-    await signup(userData);
-    return navigate(redirect, { replace: true });
+    try {
+      await authApi.signup(userData);
+      refreshConnection();
+      return navigate(redirect, { replace: true });
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   async function switchMode() {

@@ -1,3 +1,4 @@
 export const queryKeys = {
-  me: ["me"] as const,
-};
+  me: ["me"],
+  ws: ["ws"],
+} as const;

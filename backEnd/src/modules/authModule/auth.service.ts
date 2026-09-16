@@ -12,6 +12,8 @@ import { CreateUserDto } from '#user/dto/createUser.dto.js';
 import crypto from 'crypto';
 import { PrismaService } from '#prisma/prisma.service.js';
 import { ConfigService } from '@nestjs/config';
+import { ConnectionsStorage } from '../webSockets/connectionsStroage.service.js';
+import { JwtPayload } from './types/jwt.js';
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -22,6 +24,7 @@ export class AuthService {
     private readonly passwordService: PasswordService,
     private readonly userService: UserService,
     private readonly prisma: PrismaService,
+    private readonly connectionsStroage: ConnectionsStorage,
   ) {}
   async handleInvalidOrReusedRefreshToken(
     refreshTokenHash: string,
@@ -43,6 +46,16 @@ export class AuthService {
         },
       });
       this.logger.log('reuse of refresh token detected');
+      const socket = this.connectionsStroage.getConnection(
+        usedToken.session.userId,
+      );
+      if (socket) {
+        socket.close(
+          4006,
+          'suspecious activity detected logged the account out for safety and protection',
+        );
+        this.logger.log('socket closed');
+      }
     } else this.logger.log('invalid refersh token');
 
     throw new UnauthorizedException('invalid refresh token');
@@ -58,61 +71,71 @@ export class AuthService {
       .createHash('sha256')
       .update(refreshToken)
       .digest('hex');
-
-    const result = await this.prisma.$transaction(async (tx) => {
-      const session = await tx.session.findUnique({
-        where: {
-          tokenHash_deviceId: {
-            tokenHash: refreshTokenHash,
-            deviceId,
+    const newRefreshToken = crypto.randomBytes(32).toString('hex');
+    const newRefreshTokenHash = crypto
+      .createHash('sha256')
+      .update(newRefreshToken)
+      .digest('hex');
+    const result = await this.prisma.$transaction(
+      async (tx) => {
+        const session = await tx.session.findUnique({
+          where: {
+            tokenHash_deviceId: {
+              tokenHash: refreshTokenHash,
+              deviceId,
+            },
           },
-        },
-      });
-
-      if (!session) {
-        return { success: false as const };
-      }
-
-      if (session.expiresAt <= new Date()) {
-        await tx.session.delete({
-          where: { id: session.id },
+          include: {
+            user: {
+              select: { role: true },
+            },
+          },
         });
-        return { success: false as const };
-      }
 
-      const newRefreshToken = crypto.randomBytes(32).toString('hex');
+        if (!session) {
+          return { success: false as const };
+        }
 
-      const newRefreshTokenHash = crypto
-        .createHash('sha256')
-        .update(newRefreshToken)
-        .digest('hex');
+        if (session.expiresAt <= new Date()) {
+          await tx.session.delete({
+            where: { id: session.id },
+          });
+          return { success: false as const };
+        }
 
-      const updated = await tx.session.updateMany({
-        where: { id: session.id, tokenHash: refreshTokenHash, deviceId },
-        data: {
-          tokenHash: newRefreshTokenHash,
-        },
-      });
-      if (updated.count === 0) return { success: false as const };
+        const updated = await tx.session.updateMany({
+          where: { id: session.id, tokenHash: refreshTokenHash, deviceId },
+          data: {
+            tokenHash: newRefreshTokenHash,
+          },
+        });
+        if (updated.count === 0) return { success: false as const };
 
-      await tx.usedRefreshToken.create({
-        data: {
-          tokenHash: refreshTokenHash,
-          sessionId: session.id,
-        },
-      });
-      return { session, newRefreshToken, success: true as const };
-    });
+        await tx.usedRefreshToken.create({
+          data: {
+            tokenHash: refreshTokenHash,
+            sessionId: session.id,
+          },
+        });
+        return { session, newRefreshToken, success: true as const };
+      },
+      {
+        maxWait: 8000,
+        timeout: 10000,
+      },
+    );
 
     if (!result.success)
       return await this.handleInvalidOrReusedRefreshToken(
         refreshTokenHash,
         deviceId,
       );
-
-    const accessToken = await this.jwtService.signAsync({
+    const tokenData: JwtPayload = {
       sub: result.session.userId,
-    });
+      sessionId: result.session.id,
+      role: result.session.user.role,
+    };
+    const accessToken = await this.jwtService.signAsync(tokenData);
 
     return { accessToken, newRefreshToken: result.newRefreshToken };
   }
@@ -133,9 +156,6 @@ export class AuthService {
     );
 
     if (!validPassword) throw new UnauthorizedException('invalid credentials');
-    const accessToken = await this.jwtService.signAsync({
-      sub: userId,
-    });
 
     const refreshToken = crypto.randomBytes(32).toString('hex');
     const refreshTokenHash = crypto
@@ -151,7 +171,7 @@ export class AuthService {
       Date.now() + refreshTokenExpiresInDays * 24 * 60 * 60 * 1000,
     );
 
-    const existingSession = await this.prisma.session.findUnique({
+    let session = await this.prisma.session.findUnique({
       where: {
         userId_deviceId: {
           userId,
@@ -160,8 +180,8 @@ export class AuthService {
       },
     });
 
-    if (!existingSession) {
-      await this.prisma.session.upsert({
+    if (!session) {
+      session = await this.prisma.session.upsert({
         where: {
           userId_deviceId: {
             userId,
@@ -180,31 +200,40 @@ export class AuthService {
         },
       });
     } else {
-      await this.prisma.$transaction([
-        this.prisma.usedRefreshToken.deleteMany({
-          where: { sessionId: existingSession.id },
-        }),
-        this.prisma.session.update({
-          where: {
-            id: existingSession.id,
-          },
-          data: {
-            tokenHash: refreshTokenHash,
-            expiresAt,
-          },
-        }),
-      ]);
+      await this.prisma.$transaction(
+        [
+          this.prisma.usedRefreshToken.deleteMany({
+            where: { sessionId: session.id },
+          }),
+          this.prisma.session.update({
+            where: {
+              id: session.id,
+            },
+            data: {
+              tokenHash: refreshTokenHash,
+              expiresAt,
+            },
+          }),
+        ],
+        {
+          maxWait: 8000,
+          timeout: 10000,
+        },
+      );
     }
-
+    const tokenData: JwtPayload = {
+      sub: userId,
+      sessionId: session.id,
+      role: user.role,
+    };
+    const accessToken = await this.jwtService.signAsync(tokenData);
     return { accessToken, refreshToken };
   }
 
   async signup(createUserDto: CreateUserDto, deviceId: string | undefined) {
     if (!deviceId) throw new BadRequestException('no device id');
-    const { id: userId } = await this.userService.createUser(createUserDto);
-    const accessToken = await this.jwtService.signAsync({
-      sub: userId,
-    });
+    const { id: userId, role } =
+      await this.userService.createUser(createUserDto);
 
     const refreshToken = crypto.randomBytes(32).toString('hex');
     const refreshTokenHash = crypto
@@ -217,7 +246,7 @@ export class AuthService {
     const expiresAt = new Date(
       Date.now() + refreshTokenExpiresInDays * 24 * 60 * 60 * 1000,
     );
-    await this.prisma.session.create({
+    const session = await this.prisma.session.create({
       data: {
         tokenHash: refreshTokenHash,
         userId,
@@ -225,7 +254,12 @@ export class AuthService {
         expiresAt,
       },
     });
-
+    const tokenData: JwtPayload = {
+      sub: userId,
+      sessionId: session.id,
+      role,
+    };
+    const accessToken = await this.jwtService.signAsync(tokenData);
     return { accessToken, refreshToken };
   }
 
