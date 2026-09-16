@@ -25,25 +25,19 @@ class AuthApi {
   }
 
   async refresh() {
-    console.log("refresh called");
-    console.log(this.refreshPromise);
     if (!this.refreshPromise) {
-      console.log("new promise");
       this.refreshPromise = new Promise((res, rej) => {
         this.api
           .post("/auth/refresh")
           .then(() => {
             this.refreshPromise = null;
-            console.log("finish s");
             res();
           })
           .catch(err => {
             this.refreshPromise = null;
-            console.log("finish f");
             rej(err);
           })
           .finally(() => {
-            console.log("running clean up");
             this.refreshPromise = null;
           });
       });
@@ -56,7 +50,6 @@ export const authApi = new AuthApi(api);
 api.interceptors.response.use(
   res => res,
   async (err: AxiosError) => {
-    console.log(err);
     const originalRequest = err.config;
     const apiError = parseError(err);
 
@@ -70,7 +63,6 @@ api.interceptors.response.use(
     originalRequest._retry = true;
 
     if (originalRequest.url === "/auth/refresh" && apiError.status === 500) {
-      console.log("retrying refresh");
       return api(originalRequest);
     }
     await authApi.refresh();
@@ -96,7 +88,6 @@ export const connectWS = (() => {
       let authorized: boolean = false;
       connectionPromise = new Promise<boolean>((res, rej) => {
         const ws = new WebSocket("ws://localhost:3000/connect");
-        // const ws = new WebSocket("ws://192.168.1.23:3000/connect");
         connectionTimeout = setTimeout(() => {
           connectionTimeout = null;
           ws.close(4005, "aborted");
@@ -117,7 +108,6 @@ export const connectWS = (() => {
           this.onmessage = null;
           this.onclose = null;
           this.onerror = null;
-          console.log(event);
           if (ws === connection.socket) {
             connection.socket = null;
             connection.connectionId = null;
@@ -161,13 +151,9 @@ export async function connect(): Promise<AuthState> {
   try {
     const connected = await connectWS.initWS();
     if (connected) return AuthState.Authenticated;
-    console.log("connected:", connected);
-    console.log("refreshing");
     await authApi.refresh();
-    console.log("refresh succsessful");
     return (await connectWS.initWS()) ? AuthState.Authenticated : AuthState.UnAuthenticate;
   } catch {
-    console.log("error");
     return AuthState.UnAuthenticate;
   }
 }
